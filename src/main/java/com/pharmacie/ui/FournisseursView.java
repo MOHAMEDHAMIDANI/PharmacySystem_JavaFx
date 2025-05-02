@@ -85,7 +85,9 @@ public class FournisseursView extends VBox {
         grid.add(new Label("Téléphone:"), 0, 2);
         grid.add(telField, 1, 2);
 
-        dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane);
 
         ButtonType addButtonType = new ButtonType("Ajouter", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
@@ -123,7 +125,9 @@ public class FournisseursView extends VBox {
         grid.add(new Label("Téléphone:"), 0, 2);
         grid.add(telField, 1, 2);
 
-        dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane2 = new ScrollPane(grid);
+        scrollPane2.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane2);
 
         ButtonType saveButtonType = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -170,5 +174,10 @@ public class FournisseursView extends VBox {
             }
             fournisseursTable.setItems(filteredList);
         }
+    }
+
+    public void setFournisseurs(ObservableList<Fournisseur> fournisseurs) {
+        this.fournisseurs = fournisseurs;
+        fournisseursTable.setItems(fournisseurs);
     }
 }

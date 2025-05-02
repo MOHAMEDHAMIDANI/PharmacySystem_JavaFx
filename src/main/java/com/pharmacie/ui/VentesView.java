@@ -19,6 +19,8 @@ public class VentesView extends VBox {
     public VentesView() {
         setPadding(new Insets(10));
         setSpacing(10);
+        clients = FXCollections.observableArrayList();
+        medicaments = FXCollections.observableArrayList();
         initializeComponents();
     }
 
@@ -70,6 +72,21 @@ public class VentesView extends VBox {
 
         ComboBox<Client> clientCombo = new ComboBox<>(clients);
         clientCombo.setPromptText("Sélectionner un client");
+        clientCombo.setPrefWidth(200);
+        clientCombo.setCellFactory(lv -> new ListCell<Client>() {
+            @Override
+            protected void updateItem(Client item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : (item.getNom() + " " + item.getPrenom()));
+            }
+        });
+        clientCombo.setButtonCell(new ListCell<Client>() {
+            @Override
+            protected void updateItem(Client item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : (item.getNom() + " " + item.getPrenom()));
+            }
+        });
 
         DatePicker datePicker = new DatePicker(LocalDate.now());
 
@@ -106,7 +123,10 @@ public class VentesView extends VBox {
             medicationsBox.getChildren().add(medicationRow);
         });
 
-        dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane);
+        dialog.getDialogPane().setPrefSize(500, 400);
 
         ButtonType saveButtonType = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -168,6 +188,20 @@ public class VentesView extends VBox {
 
         ComboBox<Medicament> medicamentCombo = new ComboBox<>(medicaments);
         medicamentCombo.setPromptText("Sélectionner un médicament");
+        medicamentCombo.setCellFactory(lv -> new ListCell<Medicament>() {
+            @Override
+            protected void updateItem(Medicament item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
+        medicamentCombo.setButtonCell(new ListCell<Medicament>() {
+            @Override
+            protected void updateItem(Medicament item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
 
         TextField dosageField = new TextField();
         dosageField.setPromptText("Dosage");
@@ -208,6 +242,20 @@ public class VentesView extends VBox {
         content.setPadding(new Insets(10));
 
         ComboBox<Client> clientCombo = new ComboBox<>(clients);
+        clientCombo.setCellFactory(lv -> new ListCell<Client>() {
+            @Override
+            protected void updateItem(Client item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : (item.getNom() + " " + item.getPrenom()));
+            }
+        });
+        clientCombo.setButtonCell(new ListCell<Client>() {
+            @Override
+            protected void updateItem(Client item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : (item.getNom() + " " + item.getPrenom()));
+            }
+        });
         TableView<Ordonnance> historyTable = new TableView<>();
 
         TableColumn<Ordonnance, LocalDate> dateCol = new TableColumn<>("Date");
@@ -226,7 +274,9 @@ public class VentesView extends VBox {
         });
 
         content.getChildren().addAll(clientCombo, historyTable);
-        dialog.getDialogPane().setContent(content);
+        ScrollPane scrollPane2 = new ScrollPane(content);
+        scrollPane2.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane2);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
 
         dialog.showAndWait();

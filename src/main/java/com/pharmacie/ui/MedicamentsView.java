@@ -110,6 +110,7 @@ public class MedicamentsView extends VBox {
 
         TextField unitsField = new TextField();
         TextField contenanceField = new TextField();
+        Label specificLabel = new Label();
 
         grid.add(new Label("Nom:"), 0, 0);
         grid.add(nomField, 1, 0);
@@ -126,17 +127,23 @@ public class MedicamentsView extends VBox {
         grid.add(typeCombo, 1, 6);
 
         typeCombo.setOnAction(e -> {
-            grid.getChildren().removeAll(unitsField, contenanceField);
+            grid.getChildren().removeAll(specificLabel, unitsField, contenanceField);
             if (typeCombo.getValue().equals("Comprimé")) {
-                grid.add(new Label("Unités par boîte:"), 0, 7);
+                specificLabel.setText("Unités par boîte:");
+                grid.add(specificLabel, 0, 7);
                 grid.add(unitsField, 1, 7);
             } else if (typeCombo.getValue().equals("Sirop")) {
-                grid.add(new Label("Contenance (ml):"), 0, 7);
+                specificLabel.setText("Contenance (ml):");
+                grid.add(specificLabel, 0, 7);
                 grid.add(contenanceField, 1, 7);
             }
         });
+        typeCombo.getOnAction().handle(null);
 
         dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane);
 
         ButtonType addButtonType = new ButtonType("Ajouter", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
@@ -226,6 +233,9 @@ public class MedicamentsView extends VBox {
         }
 
         dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane2 = new ScrollPane(grid);
+        scrollPane2.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane2);
 
         ButtonType saveButtonType = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -310,5 +320,10 @@ public class MedicamentsView extends VBox {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    public void setMedicaments(ObservableList<Medicament> medicaments) {
+        this.medicaments = medicaments;
+        medicamentsTable.setItems(medicaments);
     }
 }

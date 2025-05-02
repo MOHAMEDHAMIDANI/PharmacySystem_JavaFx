@@ -19,6 +19,9 @@ public class CommandesView extends VBox {
     public CommandesView() {
         setPadding(new Insets(10));
         setSpacing(10);
+        commandes = FXCollections.observableArrayList();
+        fournisseurs = FXCollections.observableArrayList();
+        medicaments = FXCollections.observableArrayList();
         initializeComponents();
     }
 
@@ -32,7 +35,7 @@ public class CommandesView extends VBox {
         toolbar.getItems().addAll(newOrderButton, updateStatusButton, new Separator(), searchField);
 
         commandesTable = new TableView<>();
-        commandes = FXCollections.observableArrayList();
+        commandesTable.setItems(commandes);
 
         TableColumn<Commande, LocalDate> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getDateCommande()));
@@ -45,7 +48,6 @@ public class CommandesView extends VBox {
         statusCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus()));
 
         commandesTable.getColumns().addAll(dateCol, fournisseurCol, statusCol);
-        commandesTable.setItems(commandes);
 
         newOrderButton.setOnAction(e -> showNewOrderDialog());
         updateStatusButton.setOnAction(e -> {
@@ -74,6 +76,21 @@ public class CommandesView extends VBox {
 
         ComboBox<Fournisseur> fournisseurCombo = new ComboBox<>(fournisseurs);
         fournisseurCombo.setPromptText("Sélectionner un fournisseur");
+        fournisseurCombo.setPrefWidth(200);
+        fournisseurCombo.setCellFactory(lv -> new ListCell<Fournisseur>() {
+            @Override
+            protected void updateItem(Fournisseur item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
+        fournisseurCombo.setButtonCell(new ListCell<Fournisseur>() {
+            @Override
+            protected void updateItem(Fournisseur item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
 
         VBox medicationsBox = new VBox(10);
         Button addMedicationButton = new Button("Ajouter Médicament");
@@ -89,7 +106,10 @@ public class CommandesView extends VBox {
             medicationsBox.getChildren().add(medicationRow);
         });
 
-        dialog.getDialogPane().setContent(grid);
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane);
+        dialog.getDialogPane().setPrefSize(500, 400);
 
         ButtonType saveButtonType = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -134,6 +154,20 @@ public class CommandesView extends VBox {
 
         ComboBox<Medicament> medicamentCombo = new ComboBox<>(medicaments);
         medicamentCombo.setPromptText("Sélectionner un médicament");
+        medicamentCombo.setCellFactory(lv -> new ListCell<Medicament>() {
+            @Override
+            protected void updateItem(Medicament item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
+        medicamentCombo.setButtonCell(new ListCell<Medicament>() {
+            @Override
+            protected void updateItem(Medicament item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNom());
+            }
+        });
 
         TextField quantityField = new TextField();
         quantityField.setPromptText("Quantité");
@@ -162,7 +196,9 @@ public class CommandesView extends VBox {
         statusCombo.getItems().addAll("En attente", "En cours", "Livrée", "Annulée");
         statusCombo.setValue(commande.getStatus());
 
-        dialog.getDialogPane().setContent(statusCombo);
+        ScrollPane scrollPane2 = new ScrollPane(statusCombo);
+        scrollPane2.setFitToWidth(true);
+        dialog.getDialogPane().setContent(scrollPane2);
 
         ButtonType updateButtonType = new ButtonType("Mettre à jour", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);

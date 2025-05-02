@@ -4,12 +4,21 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.TabPane.TabClosingPolicy;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import com.pharmacie.model.*;
 
 public class MainView {
     private TabPane tabPane;
     private VBox root;
+    private ObservableList<Client> clients;
+    private ObservableList<Fournisseur> fournisseurs;
+    private ObservableList<Medicament> medicaments;
 
     public MainView() {
+        clients = FXCollections.observableArrayList();
+        fournisseurs = FXCollections.observableArrayList();
+        medicaments = FXCollections.observableArrayList();
         initializeComponents();
     }
 
@@ -23,11 +32,28 @@ public class MainView {
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
 
-        Tab clientsTab = new Tab("Clients", new ClientsView());
-        Tab medicamentsTab = new Tab("Médicaments", new MedicamentsView());
-        Tab fournisseursTab = new Tab("Fournisseurs", new FournisseursView());
-        Tab ventesTab = new Tab("Ventes", new VentesView());
-        Tab commandesTab = new Tab("Commandes", new CommandesView());
+        ClientsView clientsView = new ClientsView();
+        clientsView.setClients(clients);
+        
+        MedicamentsView medicamentsView = new MedicamentsView();
+        medicamentsView.setMedicaments(medicaments);
+        
+        FournisseursView fournisseursView = new FournisseursView();
+        fournisseursView.setFournisseurs(fournisseurs);
+        
+        VentesView ventesView = new VentesView();
+        ventesView.setClients(clients);
+        ventesView.setMedicaments(medicaments);
+        
+        CommandesView commandesView = new CommandesView();
+        commandesView.setFournisseurs(fournisseurs);
+        commandesView.setMedicaments(medicaments);
+
+        Tab clientsTab = new Tab("Clients", clientsView);
+        Tab medicamentsTab = new Tab("Médicaments", medicamentsView);
+        Tab fournisseursTab = new Tab("Fournisseurs", fournisseursView);
+        Tab ventesTab = new Tab("Ventes", ventesView);
+        Tab commandesTab = new Tab("Commandes", commandesView);
 
         tabPane.getTabs().addAll(clientsTab, medicamentsTab, fournisseursTab, ventesTab, commandesTab);
 
