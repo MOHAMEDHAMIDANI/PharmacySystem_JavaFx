@@ -1,5 +1,7 @@
 package com.pharmacie.ui;
+
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.collections.FXCollections;
@@ -21,34 +23,47 @@ public class VentesView extends VBox {
         setSpacing(10);
         clients = FXCollections.observableArrayList();
         medicaments = FXCollections.observableArrayList();
+        ordonnances = FXCollections.observableArrayList();
         initializeComponents();
     }
 
     private void initializeComponents() {
+        setFillWidth(true);
+        VBox.setVgrow(this, Priority.ALWAYS);
+
         ToolBar toolbar = new ToolBar();
         Button newSaleButton = new Button("Nouvelle Vente");
         Button viewHistoryButton = new Button("Historique Client");
         TextField searchField = new TextField();
         searchField.setPromptText("Rechercher une vente...");
+        searchField.setPrefWidth(200);
 
         toolbar.getItems().addAll(newSaleButton, viewHistoryButton, new Separator(), searchField);
 
         ordonnancesTable = new TableView<>();
-        ordonnances = FXCollections.observableArrayList();
+        ordonnancesTable.setItems(ordonnances);
+
+        VBox.setVgrow(ordonnancesTable, Priority.ALWAYS);
+        ordonnancesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Ordonnance, LocalDate> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getDatePrescription()));
+        dateCol.setPrefWidth(150);
+        dateCol.setMinWidth(100);
 
         TableColumn<Ordonnance, String> clientCol = new TableColumn<>("Client");
         clientCol.setCellValueFactory(
                 cellData -> new SimpleStringProperty(cellData.getValue().getClient().getNom() + " " +
                         cellData.getValue().getClient().getPrenom()));
+        clientCol.setPrefWidth(250);
+        clientCol.setMinWidth(150);
 
         TableColumn<Ordonnance, Number> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getPrixTotal()));
+        totalCol.setPrefWidth(150);
+        totalCol.setMinWidth(100);
 
         ordonnancesTable.getColumns().addAll(dateCol, clientCol, totalCol);
-        ordonnancesTable.setItems(ordonnances);
 
         newSaleButton.setOnAction(e -> showNewSaleDialog());
         viewHistoryButton.setOnAction(e -> showClientHistoryDialog());
@@ -65,14 +80,17 @@ public class VentesView extends VBox {
         dialog.setTitle("Nouvelle Vente");
         dialog.setHeaderText("Créer une nouvelle ordonnance");
 
+        VBox mainContainer = new VBox(10);
+        mainContainer.setPadding(new Insets(10));
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.setPadding(new Insets(10));
 
         ComboBox<Client> clientCombo = new ComboBox<>(clients);
         clientCombo.setPromptText("Sélectionner un client");
-        clientCombo.setPrefWidth(200);
+        clientCombo.setPrefWidth(300);
         clientCombo.setCellFactory(lv -> new ListCell<Client>() {
             @Override
             protected void updateItem(Client item, boolean empty) {
@@ -89,15 +107,25 @@ public class VentesView extends VBox {
         });
 
         DatePicker datePicker = new DatePicker(LocalDate.now());
+        datePicker.setPrefWidth(200);
 
         CheckBox hasInsuranceCheck = new CheckBox("Carte d'assurance");
         TextField insuranceNumberField = new TextField();
         insuranceNumberField.setPromptText("Numéro de sécurité sociale");
+        insuranceNumberField.setPrefWidth(250);
         TextField insuranceRateField = new TextField();
         insuranceRateField.setPromptText("Taux de réduction (%)");
+        insuranceRateField.setPrefWidth(100);
 
-        VBox medicationsBox = new VBox(10);
+        VBox medicationsContainer = new VBox(5);
+        medicationsContainer.setPadding(new Insets(5));
+        ScrollPane medicationsScroll = new ScrollPane(medicationsContainer);
+        medicationsScroll.setFitToWidth(true);
+        medicationsScroll.setPrefHeight(200);
+        medicationsScroll.setStyle("-fx-background-color: transparent;");
+
         Button addMedicationButton = new Button("Ajouter Médicament");
+        addMedicationButton.setStyle("-fx-base: #4CAF50;");
 
         grid.add(new Label("Client:"), 0, 0);
         grid.add(clientCombo, 1, 0);
@@ -108,8 +136,11 @@ public class VentesView extends VBox {
         grid.add(new Label("Taux:"), 0, 3);
         grid.add(insuranceRateField, 1, 3);
         grid.add(new Label("Médicaments:"), 0, 4);
-        grid.add(medicationsBox, 1, 4);
+        grid.add(medicationsScroll, 1, 4);
         grid.add(addMedicationButton, 1, 5);
+        GridPane.setColumnSpan(medicationsScroll, 1);
+
+        mainContainer.getChildren().add(grid);
 
         insuranceNumberField.setDisable(true);
         insuranceRateField.setDisable(true);
@@ -118,15 +149,16 @@ public class VentesView extends VBox {
             insuranceRateField.setDisable(!newVal);
         });
 
+        medicationsContainer.getChildren().add(createMedicationRow());
+
         addMedicationButton.setOnAction(e -> {
-            HBox medicationRow = createMedicationRow();
-            medicationsBox.getChildren().add(medicationRow);
+            medicationsContainer.getChildren().add(createMedicationRow());
         });
 
-        ScrollPane scrollPane = new ScrollPane(grid);
+        ScrollPane scrollPane = new ScrollPane(mainContainer);
         scrollPane.setFitToWidth(true);
         dialog.getDialogPane().setContent(scrollPane);
-        dialog.getDialogPane().setPrefSize(500, 400);
+        dialog.getDialogPane().setPrefSize(1000, 800);
 
         ButtonType saveButtonType = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
@@ -134,13 +166,21 @@ public class VentesView extends VBox {
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 Client selectedClient = clientCombo.getValue();
-                if (selectedClient != null) {
+                if (selectedClient != null && !medicationsContainer.getChildren().isEmpty()) {
                     Ordonnance ordonnance = new Ordonnance(datePicker.getValue(), selectedClient);
 
                     if (hasInsuranceCheck.isSelected()) {
                         try {
-                            String numero = insuranceNumberField.getText();
-                            double taux = Double.parseDouble(insuranceRateField.getText()) / 100.0;
+                            String numero = insuranceNumberField.getText().trim();
+                            double taux = Double.parseDouble(insuranceRateField.getText().trim()) / 100.0;
+                            if (numero.isEmpty()) {
+                                showError("Erreur", "Le numéro de sécurité sociale est requis");
+                                return null;
+                            }
+                            if (taux < 0 || taux > 1) {
+                                showError("Erreur", "Le taux de réduction doit être entre 0 et 100");
+                                return null;
+                            }
                             CarteAssurance carte = new CarteAssurance(numero, true, taux);
                             ordonnance.setCarteAssurance(carte);
                         } catch (NumberFormatException ex) {
@@ -149,7 +189,7 @@ public class VentesView extends VBox {
                         }
                     }
 
-                    for (javafx.scene.Node node : medicationsBox.getChildren()) {
+                    for (javafx.scene.Node node : medicationsContainer.getChildren()) {
                         if (node instanceof HBox) {
                             HBox row = (HBox) node;
                             ComboBox<Medicament> medCombo = (ComboBox<Medicament>) row.getChildren().get(0);
@@ -159,9 +199,18 @@ public class VentesView extends VBox {
 
                             try {
                                 Medicament med = medCombo.getValue();
-                                int dosage = Integer.parseInt(dosageField.getText());
-                                int frequence = Integer.parseInt(frequenceField.getText());
-                                int duree = Integer.parseInt(dureeField.getText());
+                                int dosage = Integer.parseInt(dosageField.getText().trim());
+                                int frequence = Integer.parseInt(frequenceField.getText().trim());
+                                int duree = Integer.parseInt(dureeField.getText().trim());
+
+                                if (med == null) {
+                                    showError("Erreur", "Veuillez sélectionner un médicament");
+                                    return null;
+                                }
+                                if (dosage <= 0 || frequence <= 0 || duree <= 0) {
+                                    showError("Erreur", "Les valeurs doivent être positives");
+                                    return null;
+                                }
 
                                 ordonnance.ajouterMedicament(med, dosage, frequence, duree);
                             } catch (NumberFormatException ex) {
@@ -172,22 +221,30 @@ public class VentesView extends VBox {
                     }
 
                     return ordonnance;
+                } else {
+                    showError("Erreur", "Veuillez sélectionner un client et ajouter au moins un médicament");
+                    return null;
                 }
             }
             return null;
         });
 
         dialog.showAndWait().ifPresent(ordonnance -> {
-            ordonnances.add(ordonnance);
-            ordonnance.getClient().ajouterOrdonnance(ordonnance);
+            if (ordonnance != null) {
+                ordonnances.add(ordonnance);
+                ordonnance.getClient().ajouterOrdonnance(ordonnance);
+            }
         });
     }
 
     private HBox createMedicationRow() {
         HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setPadding(new Insets(5));
 
         ComboBox<Medicament> medicamentCombo = new ComboBox<>(medicaments);
         medicamentCombo.setPromptText("Sélectionner un médicament");
+        medicamentCombo.setPrefWidth(250);
         medicamentCombo.setCellFactory(lv -> new ListCell<Medicament>() {
             @Override
             protected void updateItem(Medicament item, boolean empty) {
@@ -208,23 +265,28 @@ public class VentesView extends VBox {
         dosageField.setPrefWidth(80);
 
         TextField frequenceField = new TextField();
-        frequenceField.setPromptText("Fréquence");
+        frequenceField.setPromptText("Fréq/j");
         frequenceField.setPrefWidth(80);
 
         TextField dureeField = new TextField();
-        dureeField.setPromptText("Durée (jours)");
+        dureeField.setPromptText("Jours");
         dureeField.setPrefWidth(80);
 
         Button removeButton = new Button("X");
+        removeButton.setStyle("-fx-base: #F44336;");
         removeButton.setOnAction(e -> {
-            ((VBox) row.getParent()).getChildren().remove(row);
+            Pane parent = (Pane) row.getParent();
+            parent.getChildren().remove(row);
+            if (parent.getChildren().isEmpty()) {
+                parent.getChildren().add(createMedicationRow());
+            }
         });
 
         row.getChildren().addAll(
                 medicamentCombo,
                 new Label("Dosage:"),
                 dosageField,
-                new Label("Fréquence:"),
+                new Label("Fréq:"),
                 frequenceField,
                 new Label("Durée:"),
                 dureeField,
@@ -242,6 +304,8 @@ public class VentesView extends VBox {
         content.setPadding(new Insets(10));
 
         ComboBox<Client> clientCombo = new ComboBox<>(clients);
+        clientCombo.setPromptText("Sélectionner un client");
+        clientCombo.setPrefWidth(400);
         clientCombo.setCellFactory(lv -> new ListCell<Client>() {
             @Override
             protected void updateItem(Client item, boolean empty) {
@@ -256,12 +320,19 @@ public class VentesView extends VBox {
                 setText(empty || item == null ? null : (item.getNom() + " " + item.getPrenom()));
             }
         });
+
         TableView<Ordonnance> historyTable = new TableView<>();
+        historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Ordonnance, LocalDate> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getDatePrescription()));
+        dateCol.setPrefWidth(200);
+        dateCol.setMinWidth(150);
 
         TableColumn<Ordonnance, Number> totalCol = new TableColumn<>("Total");
+        totalCol.setPrefWidth(200);
+        totalCol.setMinWidth(150);
+
+        dateCol.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getDatePrescription()));
         totalCol.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getPrixTotal()));
 
         historyTable.getColumns().addAll(dateCol, totalCol);
@@ -274,9 +345,8 @@ public class VentesView extends VBox {
         });
 
         content.getChildren().addAll(clientCombo, historyTable);
-        ScrollPane scrollPane2 = new ScrollPane(content);
-        scrollPane2.setFitToWidth(true);
-        dialog.getDialogPane().setContent(scrollPane2);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setPrefSize(800, 600);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
 
         dialog.showAndWait();

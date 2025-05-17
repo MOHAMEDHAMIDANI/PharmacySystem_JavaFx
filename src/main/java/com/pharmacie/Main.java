@@ -14,7 +14,6 @@ public class Main extends Application {
         MainView mainView = new MainView();
         Scene scene = new Scene(mainView.getRoot(), 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/styles/main.css").toExternalForm());
-        
         primaryStage.setTitle("Gestion de Pharmacie");
         primaryStage.setScene(scene);
         primaryStage.show();
